@@ -253,20 +253,32 @@ public class ReportGenerator {
         try {
             String reportJson = mapper.writeValueAsString(reportData);
             String htmlContent = String.format(ReportHtmlTemplate.getHtmlTemplate(), reportJson);
+            
             // Ensure the output directory exists
+            Path outputPath = config.getOutputDirectory();
             Files.createDirectories(outputPath);
             
-            // Copy JS files to output directory
+            // Create js directory and copy required files
             Path jsOutputPath = outputPath.resolve("js");
             Files.createDirectories(jsOutputPath);
             
-            // Copy report-app.js
-            Path reportAppSource = Paths.get("src/main/resources/static/js/report-app.js");
-            Files.copy(reportAppSource, jsOutputPath.resolve("report-app.js"), StandardCopyOption.REPLACE_EXISTING);
+            // Copy JavaScript files from resources to output
+            Path resourcesPath = Paths.get("src/main/resources/static/js");
+            if (Files.exists(resourcesPath)) {
+                Files.list(resourcesPath).forEach(source -> {
+                    try {
+                        Path destination = jsOutputPath.resolve(source.getFileName());
+                        Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
+                    } catch (IOException e) {
+                        System.err.println("Failed to copy JS file: " + source + " - " + e.getMessage());
+                    }
+                });
+            }
             
-            // Copy utils.js
-            Path utilsSource = Paths.get("src/main/resources/static/js/utils.js");
-            Files.copy(utilsSource, jsOutputPath.resolve("utils.js"), StandardCopyOption.REPLACE_EXISTING); handleRefreshReport=()=>{setReportData(window.REPORT_DATA);setSearchTerm('');setFilterStatus('All');setFilterEnvironment('All');setFilterPlatform('All');setExpandedSuites({});setExpandedTestCases({});};
+            // Write the HTML report
+            File outputFile = outputPath.resolve(config.getReportFileName()).toFile();
+            FileUtils.writeStringToFile(outputFile, htmlContent, StandardCharsets.UTF_8);
+            System.out.println("Test automation report generated successfully at: " + outputFile.getAbsolutePath()); handleRefreshReport=()=>{setReportData(window.REPORT_DATA);setSearchTerm('');setFilterStatus('All');setFilterEnvironment('All');setFilterPlatform('All');setExpandedSuites({});setExpandedTestCases({});};
             const allEnvironments=React.useMemo(()=>{if(!reportData)return[];const envs=new Set();reportData.suites.forEach(suite=>suite.testCases.forEach(tc=>envs.add(tc.environment)));return['All',...Array.from(envs).sort()]},[reportData]);
             const allPlatforms=React.useMemo(()=>{if(!reportData)return[];const plats=new Set();reportData.suites.forEach(suite=>suite.testCases.forEach(tc=>plats.add(tc.platform)));return['All',...Array.from(plats).sort()]},[reportData]);
             const filteredSuites=React.useMemo(()=>{if(!reportData)return[];return reportData.suites.map(suite=>{const filteredTestCases=suite.testCases.filter(testCase=>{const matchesSearch=testCase.name.toLowerCase().includes(searchTerm.toLowerCase())||testCase.description.toLowerCase().includes(searchTerm.toLowerCase())||testCase.steps.some(step=>step.description.toLowerCase().includes(searchTerm.toLowerCase()));const matchesStatus=filterStatus==='All'||testCase.status===filterStatus;const matchesEnvironment=filterEnvironment==='All'||testCase.environment===filterEnvironment;const matchesPlatform=filterPlatform==='All'||testCase.platform===filterPlatform;return matchesSearch&&matchesStatus&&matchesEnvironment&&matchesPlatform;});if(filteredTestCases.length===0&&(searchTerm||filterStatus!=='All'||filterEnvironment!=='All'||filterPlatform!=='All')){return null;}return{...suite,testCases:filteredTestCases};}).filter(Boolean);},[reportData,searchTerm,filterStatus,filterEnvironment,filterPlatform]);
