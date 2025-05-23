@@ -256,11 +256,17 @@ public class ReportGenerator {
             // Ensure the output directory exists
             Files.createDirectories(outputPath);
             
-            // Copy the React component file to the output directory
+            // Copy JS files to output directory
             Path jsOutputPath = outputPath.resolve("js");
             Files.createDirectories(jsOutputPath);
-            Path resourcePath = Paths.get("src/main/resources/static/js/report-app.js");
-            Files.copy(resourcePath, jsOutputPath.resolve("report-app.js"), StandardCopyOption.REPLACE_EXISTING);const[expandedTestCases,setExpandedTestCases,toggleTestCaseExpansion]=React.useState({}),React.useCallback(testCaseId=>{setExpandedTestCases(prev=>({...prev,[testCaseId]:!prev[testCaseId]}))},[]);const[showFilters,setShowFilters]=React.useState(!1);React.useEffect(()=>{setReportData(window.REPORT_DATA);},[]);const handleRefreshReport=()=>{setReportData(window.REPORT_DATA);setSearchTerm('');setFilterStatus('All');setFilterEnvironment('All');setFilterPlatform('All');setExpandedSuites({});setExpandedTestCases({});};
+            
+            // Copy report-app.js
+            Path reportAppSource = Paths.get("src/main/resources/static/js/report-app.js");
+            Files.copy(reportAppSource, jsOutputPath.resolve("report-app.js"), StandardCopyOption.REPLACE_EXISTING);
+            
+            // Copy utils.js
+            Path utilsSource = Paths.get("src/main/resources/static/js/utils.js");
+            Files.copy(utilsSource, jsOutputPath.resolve("utils.js"), StandardCopyOption.REPLACE_EXISTING); handleRefreshReport=()=>{setReportData(window.REPORT_DATA);setSearchTerm('');setFilterStatus('All');setFilterEnvironment('All');setFilterPlatform('All');setExpandedSuites({});setExpandedTestCases({});};
             const allEnvironments=React.useMemo(()=>{if(!reportData)return[];const envs=new Set();reportData.suites.forEach(suite=>suite.testCases.forEach(tc=>envs.add(tc.environment)));return['All',...Array.from(envs).sort()]},[reportData]);
             const allPlatforms=React.useMemo(()=>{if(!reportData)return[];const plats=new Set();reportData.suites.forEach(suite=>suite.testCases.forEach(tc=>plats.add(tc.platform)));return['All',...Array.from(plats).sort()]},[reportData]);
             const filteredSuites=React.useMemo(()=>{if(!reportData)return[];return reportData.suites.map(suite=>{const filteredTestCases=suite.testCases.filter(testCase=>{const matchesSearch=testCase.name.toLowerCase().includes(searchTerm.toLowerCase())||testCase.description.toLowerCase().includes(searchTerm.toLowerCase())||testCase.steps.some(step=>step.description.toLowerCase().includes(searchTerm.toLowerCase()));const matchesStatus=filterStatus==='All'||testCase.status===filterStatus;const matchesEnvironment=filterEnvironment==='All'||testCase.environment===filterEnvironment;const matchesPlatform=filterPlatform==='All'||testCase.platform===filterPlatform;return matchesSearch&&matchesStatus&&matchesEnvironment&&matchesPlatform;});if(filteredTestCases.length===0&&(searchTerm||filterStatus!=='All'||filterEnvironment!=='All'||filterPlatform!=='All')){return null;}return{...suite,testCases:filteredTestCases};}).filter(Boolean);},[reportData,searchTerm,filterStatus,filterEnvironment,filterPlatform]);
