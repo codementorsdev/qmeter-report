@@ -24,11 +24,8 @@ public class ReportHtmlTemplate {
                 <div id="root"></div>
                 <script>
                     const REPORT_DATA = %s;
-                    const generateUUID = () => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                        const r = Math.random() * 16 | 0;
-                        const v = c === 'x' ? r : (r & 0x3 | 0x8);
-                        return v.toString(16);
-                    });
+                </script>
+                <script src="js/report-app.js"></script>
                     const formatDuration = (ms) => {
                         if (ms < 1000) return ms + 'ms';
                         const seconds = Math.floor(ms/1000);
