@@ -283,7 +283,6 @@ public class ReportGenerator {
 
             File outputFile = outputPath.resolve(config.getReportFileName()).toFile();
             FileUtils.writeStringToFile(outputFile, htmlContent, StandardCharsets.UTF_8);
-
             System.out.println("Test automation report generated successfully at: " + outputFile.getAbsolutePath());
         } catch (IOException e) {
             System.err.println("Failed to generate report: " + e.getMessage());
